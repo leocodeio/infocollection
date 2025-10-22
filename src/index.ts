@@ -10,8 +10,11 @@ validateEnv();
 const app = express();
 const port = process.env.PORT;
 
-app.use(express.static("public"));
+app.get("/", (req, res) => {
+  res.send("Hello people, this is the home page");
+});
 
+app.use(express.static("public"));
 app.use("/app", clientRoutes);
 
 app.listen(port, () => {

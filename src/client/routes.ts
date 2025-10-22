@@ -7,8 +7,12 @@ const __dirname = resolve(__filename, "..", "..", "..");
 
 const router: Router = Router();
 
-router.get("/", (req, res) => {
+router.get("/", (_, res) => {
   return res.sendFile(resolve(__dirname, "public", "index.html"));
+});
+
+router.get("/surf", (_, res) => {
+  return res.sendFile(resolve(__dirname, "public", "surf.html"));
 });
 
 export default router;

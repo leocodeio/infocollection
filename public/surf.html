@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Search Keywords - InfoCollection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --primary-color: #d4af37;
+        --dark-bg: #0f1115;
+        --light-text: #f5f7fb;
+        --accent: #171a21;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background-color: var(--dark-bg);
+        color: var(--light-text);
+        line-height: 1.618;
+      }
+      .page {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .main {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+      }
+      .container {
+        width: 100%;
+        max-width: 62rem;
+        margin: 0 auto;
+        padding: 0 1rem;
+      }
+      .navbar {
+        background-color: var(--accent);
+        border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        padding: 1rem 0;
+      }
+      .navbar .container {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+      }
+      .navbar-brand {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.2s ease;
+      }
+      .navbar-brand:hover {
+        color: #e6c547;
+      }
+      .navbar-title {
+        font-size: 1.618rem;
+        margin: 0;
+        flex: 1;
+      }
+      .search-container {
+        width: 100%;
+        max-width: 38.2rem;
+      }
+      .search-card {
+        background-color: var(--accent);
+        border-radius: 0.75rem;
+        padding: 2.618rem;
+        border: 1px solid rgba(212, 175, 55, 0.15);
+      }
+      .search-title {
+        font-size: 1.618rem;
+        margin-bottom: 0.618rem;
+        font-weight: 700;
+      }
+      .search-description {
+        color: rgba(245, 247, 251, 0.65);
+        margin-bottom: 1.618rem;
+        font-size: 0.95rem;
+      }
+      .search-form {
+        margin-bottom: 1.618rem;
+      }
+      .input-group {
+        display: flex;
+        gap: 0.618rem;
+      }
+      .search-input {
+        background-color: rgba(212, 175, 55, 0.05);
+        border: 1px solid rgba(212, 175, 55, 0.2);
+        color: var(--light-text);
+        padding: 0.809rem 1rem;
+        border-radius: 0.5rem;
+        flex: 1;
+        transition: all 0.2s ease;
+      }
+      .search-input:focus {
+        background-color: rgba(212, 175, 55, 0.1);
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.12);
+        outline: none;
+      }
+      .search-input::placeholder {
+        color: rgba(245, 247, 251, 0.45);
+      }
+      .btn-search {
+        background-color: var(--primary-color);
+        border: 1px solid var(--primary-color);
+        color: #111318;
+        font-weight: 600;
+        padding: 0.809rem 1.236rem;
+        border-radius: 0.5rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: pointer;
+      }
+      .btn-search:hover {
+        background-color: #e6c547;
+        border-color: #e6c547;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(212, 175, 55, 0.28);
+      }
+      .results {
+        min-height: 1.618rem;
+      }
+      .keyword-tag {
+        display: inline-block;
+        background-color: rgba(212, 175, 55, 0.15);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        color: var(--primary-color);
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
+        margin: 0.309rem;
+        font-size: 0.9rem;
+      }
+      .footer {
+        background-color: var(--accent);
+        padding: 1.618rem 0;
+        text-align: center;
+        border-top: 1px solid rgba(212, 175, 55, 0.2);
+      }
+      .footer p {
+        color: rgba(245, 245, 245, 0.65);
+        font-size: 0.95rem;
+        margin: 0;
+      }
+      @media (max-width: 768px) {
+        .search-card {
+          padding: 1.618rem;
+        }
+        .navbar .container {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.809rem;
+        }
+        .input-group {
+          flex-direction: column;
+        }
+        .btn-search {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="navbar">
+        <div class="container">
+          <a href="/app" class="navbar-brand">← Back</a>
+          <h1 class="navbar-title">Keyword Search</h1>
+        </div>
+      </header>
+
+      <main class="main">
+        <div class="search-container">
+          <div class="search-card">
+            <h2 class="search-title">Enter Keywords</h2>
+            <p class="search-description">Search for people across platforms</p>
+
+            <form id="searchForm" class="search-form">
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="keywordInput"
+                  class="search-input"
+                  placeholder="Enter keywords (e.g., 'python developer')"
+                  required
+                />
+                <button type="submit" class="btn-search">Search</button>
+              </div>
+            </form>
+
+            <div id="results" class="results"></div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <div class="container">
+          <p>&copy; 2025 InfoCollection. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      const keywordInput = document.getElementById("keywordInput");
+      const searchForm = document.getElementById("searchForm");
+      const resultsContainer = document.getElementById("results");
+
+      searchForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const keyword = keywordInput.value.trim();
+        if (!keyword) return;
+        alert(`Keyword: ${keyword}`);
+        const tag = document.createElement("span");
+        tag.className = "keyword-tag";
+        tag.textContent = keyword;
+        resultsContainer.appendChild(tag);
+        keywordInput.value = "";
+      });
+
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("Surf page loaded");
+      });
+    </script>
+  </body>
+</html>
