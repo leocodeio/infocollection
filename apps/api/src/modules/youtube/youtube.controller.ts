@@ -1,12 +1,23 @@
 import { Controller, Get, Query, Logger } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiQuery,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 import { YoutubeService } from './youtube.service';
 import { SearchChannelsDto } from './dto/search-channels.dto';
 import type {
   SearchChannelsResponse,
   WorkflowResponse,
 } from './dto/search-channels.dto';
-import { readFileSync } from 'fs';
+import {
+  SearchChannelsResponseDto,
+  WorkflowResponseDto,
+} from './dto/search-channels.dto';
+import { YOUTUBE_WORKFLOW } from './youtube.workflow';
 
+@ApiTags('youtube')
 @Controller('youtube')
 export class YoutubeController {
   private readonly logger = new Logger(YoutubeController.name);
@@ -14,6 +25,73 @@ export class YoutubeController {
   constructor(private readonly youtubeService: YoutubeService) {}
 
   @Get('search')
+  @ApiOperation({
+    summary: 'Search YouTube channels',
+    description:
+      'Search for YouTube channels with advanced filtering options including subscriber count, view count, video count, and more.',
+  })
+  @ApiQuery({
+    name: 'keywords',
+    type: String,
+    required: true,
+    description: 'Search keywords (comma-separated)',
+    example: 'technology,programming',
+  })
+  @ApiQuery({
+    name: 'maxResults',
+    type: Number,
+    required: false,
+    description: 'Maximum number of results',
+    example: 25,
+  })
+  @ApiQuery({
+    name: 'order',
+    enum: ['relevance', 'date', 'rating', 'title', 'viewCount', 'videoCount'],
+    required: false,
+    description: 'Sort order for results',
+  })
+  @ApiQuery({
+    name: 'minSubscribers',
+    type: Number,
+    required: false,
+    description: 'Minimum subscriber count',
+  })
+  @ApiQuery({
+    name: 'maxSubscribers',
+    type: Number,
+    required: false,
+    description: 'Maximum subscriber count',
+  })
+  @ApiQuery({
+    name: 'minVideoCount',
+    type: Number,
+    required: false,
+    description: 'Minimum video count',
+  })
+  @ApiQuery({
+    name: 'maxVideoCount',
+    type: Number,
+    required: false,
+    description: 'Maximum video count',
+  })
+  @ApiQuery({
+    name: 'regionCode',
+    type: String,
+    required: false,
+    description: 'Region code (ISO 3166-1 alpha-2)',
+    example: 'US',
+  })
+  @ApiQuery({
+    name: 'country',
+    type: String,
+    required: false,
+    description: 'Country filter',
+    example: 'US',
+  })
+  @ApiOkResponse({
+    description: 'Successful channel search',
+    type: SearchChannelsResponseDto,
+  })
   async searchChannels(
     @Query() query: Record<string, string>,
   ): Promise<SearchChannelsResponse> {
@@ -97,13 +175,19 @@ export class YoutubeController {
   }
 
   @Get('workflow')
+  @ApiOperation({
+    summary: 'Get n8n workflow',
+    description:
+      'Retrieve the n8n workflow configuration for YouTube channel search',
+  })
+  @ApiOkResponse({
+    description: 'Workflow configuration retrieved successfully',
+    type: WorkflowResponseDto,
+  })
   getWorkflow(): WorkflowResponse {
-    const workflow = JSON.parse(
-      readFileSync('./youtube.workflow.json', 'utf8'),
-    ) as Record<string, unknown>;
     return {
       success: true,
-      workflow,
+      workflow: YOUTUBE_WORKFLOW,
       description:
         'n8n workflow for YouTube channel search with advanced filters',
     };
