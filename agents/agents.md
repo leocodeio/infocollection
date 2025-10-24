@@ -6,7 +6,7 @@ SYSTEM PROMPT:
 # Do's
 
 - use Resources to get details
--
+- use pnpm to install dependencies, run commands, etc.
 
 # Don'ts
 
