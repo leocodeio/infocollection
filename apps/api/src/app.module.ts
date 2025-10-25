@@ -5,8 +5,14 @@ import { AppService } from './app.service';
 import { YoutubeModule } from './modules/youtube/youtube.module';
 import Joi from 'joi';
 
+// Better auth
+import { AuthModule } from '@thallesp/nestjs-better-auth';
+import { auth } from './modules/better-auth/auth';
+import { UserController } from './modules/better-auth/user.controller';
+
 @Module({
   imports: [
+    AuthModule.forRoot({ auth }),
     ConfigModule.forRoot({
       isGlobal: true,
       // Load environment variables - update with the path to your .env file
@@ -42,7 +48,7 @@ import Joi from 'joi';
     }),
     YoutubeModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, UserController],
   providers: [AppService],
 })
 export class AppModule {}

@@ -4,7 +4,8 @@ import { AppModule } from './app.module';
 import { BootstrapConfig } from './api_utils/bootstrap.config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
+
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') || 3000;
   const nodeEnv = configService.get<string>('NODE_ENV');

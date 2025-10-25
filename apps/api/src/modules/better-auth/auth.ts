@@ -9,7 +9,9 @@ import { prismaAdapter } from 'better-auth/adapters/prisma';
 /*
  * prisma
  */
-import PrismaClient from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 /*
  * polar
@@ -56,7 +58,7 @@ export const auth = betterAuth({
     process.env.APP_BASE_URL as string,
     process.env.API_BASE_URL as string,
   ],
-  database: prismaAdapter(PrismaClient, {
+  database: prismaAdapter(prisma, {
     provider: 'postgresql',
   }),
 
