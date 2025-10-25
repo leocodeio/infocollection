@@ -19,7 +19,9 @@ async function bootstrap() {
     if (nodeEnv === 'development') {
       console.log(`server running at http://localhost:${port}`);
     } else {
-      console.log(`server running at ${configService.get<string>('BASE_URL')}`);
+      console.log(
+        `server running at ${configService.get<string>('API_BASE_URL')}`,
+      );
     }
   });
 }

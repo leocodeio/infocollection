@@ -17,7 +17,8 @@ import Joi from 'joi';
         PORT: Joi.number().required(),
         APP_NAME: Joi.string().required(),
         NODE_ENV: Joi.string().required(),
-        BASE_URL: Joi.string().required(),
+        API_BASE_URL: Joi.string().required(),
+        APP_BASE_URL: Joi.string().required(),
 
         // Database
         DATABASE_URL: Joi.string().required(),
@@ -32,6 +33,11 @@ import Joi from 'joi';
 
         // Cors
         CORS_ORIGIN: Joi.string().optional().default('*'),
+
+        // better auth
+        BETTER_AUTH_SECRET: Joi.string().required().default('sosec'),
+        BETTER_AUTH_GOOGLE_ID: Joi.string().required().default('sosec'),
+        BETTER_AUTH_GOOGLE_SECRET: Joi.string().required().default('sosec'),
       }),
     }),
     YoutubeModule,
