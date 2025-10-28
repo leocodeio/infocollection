@@ -4,7 +4,7 @@ import {
   SearchChannelsDto,
   ChannelSearchResult,
 } from './dto/search-channels.dto';
-import { WorkflowExecutor } from '../../utils/workflow.executor';
+import { WorkflowExecutor } from '../../../utils/workflow.executor';
 
 @Injectable()
 export class YoutubeService {

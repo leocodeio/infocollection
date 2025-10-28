@@ -2,8 +2,8 @@ import { Logger } from '@nestjs/common';
 import {
   SearchChannelsDto,
   ChannelSearchResult,
-} from '../modules/youtube/dto/search-channels.dto';
-import { YOUTUBE_WORKFLOW } from '../modules/youtube/youtube.workflow';
+} from '../modules/query/youtube/dto/search-channels.dto';
+import { YOUTUBE_WORKFLOW } from '../modules/query/youtube/youtube.workflow';
 
 interface WorkflowNode {
   id: string;

@@ -2,13 +2,13 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { YoutubeModule } from './modules/youtube/youtube.module';
+import { QueryModule } from './modules/query/query.module';
 import Joi from 'joi';
 
 // Better auth
 import { AuthModule } from '@thallesp/nestjs-better-auth';
 import { auth } from './modules/better-auth/auth';
-import { UserController } from './modules/better-auth/user.controller';
+import { UserModule } from './modules/better-auth/user/user.module';
 
 @Module({
   imports: [
@@ -46,9 +46,10 @@ import { UserController } from './modules/better-auth/user.controller';
         BETTER_AUTH_GOOGLE_SECRET: Joi.string().required().default('sosec'),
       }),
     }),
-    YoutubeModule,
+    QueryModule,
+    UserModule,
   ],
-  controllers: [AppController, UserController],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}

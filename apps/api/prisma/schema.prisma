@@ -29,6 +29,7 @@ model User {
   subscriptionId   String?
   sessions         Session[]
   accounts         Account[]
+  queries          Query[]
 
   @@unique([email])
   @@map("user")
@@ -77,4 +78,56 @@ model Verification {
   updatedAt  DateTime @default(now()) @updatedAt
 
   @@map("verification")
+}
+
+enum Platform {
+  YOUTUBE
+  INSTAGRAM
+  REDDIT
+  TWITTER
+  TIKTOK
+  LINKEDIN
+  FACEBOOK
+  OTHER
+}
+
+enum QueryStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model Query {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keywords     String[]
+  platforms    Platform[]
+  status       QueryStatus   @default(PENDING)
+  totalResults Int           @default(0)
+  filters      Json?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  completedAt  DateTime?
+  errorMessage String?
+  results      QueryResult[]
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@map("query")
+}
+
+model QueryResult {
+  id         String   @id @default(cuid())
+  queryId    String
+  query      Query    @relation(fields: [queryId], references: [id], onDelete: Cascade)
+  platform   Platform
+  attributes Json
+  data       Json
+  createdAt  DateTime @default(now())
+
+  @@index([queryId])
+  @@map("query_result")
 }
