@@ -8,6 +8,7 @@ import Joi from 'joi';
 // Better auth
 import { AuthModule } from '@thallesp/nestjs-better-auth';
 import { auth } from './modules/better-auth/auth';
+import { AuthController } from './modules/better-auth/auth.controller';
 import { UserModule } from './modules/better-auth/user/user.module';
 
 @Module({
@@ -49,7 +50,7 @@ import { UserModule } from './modules/better-auth/user/user.module';
     QueryModule,
     UserModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, AuthController],
   providers: [AppService],
 })
 export class AppModule {}

@@ -52,6 +52,16 @@ import { bearer } from 'better-auth/plugins';
  */
 export const auth = betterAuth({
   /*
+   * base URL - required for OAuth callbacks
+   */
+  baseURL: process.env.API_BASE_URL as string,
+
+  /*
+   * secret for signing tokens
+   */
+  secret: process.env.BETTER_AUTH_SECRET!,
+
+  /*
    * database
    */
   trustedOrigins: [
@@ -77,6 +87,7 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.BETTER_AUTH_GOOGLE_ID!,
       clientSecret: process.env.BETTER_AUTH_GOOGLE_SECRET!,
+      redirectURI: `${process.env.API_BASE_URL}/api/auth/callback/google`,
     },
   },
 
@@ -113,8 +124,8 @@ export const auth = betterAuth({
     cookiePrefix: 'leostack',
   },
   session: {
-    // expiresIn: 60 * 60 * 8, // 8 hours
-    expiresIn: 60,
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // 1 day
   },
   /*
    * plugins

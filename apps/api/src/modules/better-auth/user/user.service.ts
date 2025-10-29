@@ -4,7 +4,7 @@ import {
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { Account, PrismaClient, User } from '@prisma/client';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
@@ -22,8 +22,22 @@ export class UserService {
   /**
    * Get user by ID
    */
-  async getUserById(userId: string) {
+  async getUserById(userId: string): Promise<User> {
     const user = await this.prisma.user.findUnique({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        emailVerified: true,
+        image: true,
+        role: true,
+        phone: true,
+        phoneVerified: true,
+        profileCompleted: true,
+        subscriptionId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
       where: { id: userId },
     });
 
@@ -37,7 +51,9 @@ export class UserService {
   /**
    * Get user with accounts (linked providers)
    */
-  async getUserWithAccounts(userId: string) {
+  async getUserWithAccounts(
+    userId: string,
+  ): Promise<User & { accounts: Account[] }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -55,13 +71,13 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
-    return this.sanitizeUser(user);
+    return this.sanitizeUser(user) as User & { accounts: Account[] };
   }
 
   /**
    * Update user profile
    */
-  async updateUser(userId: string, updateData: UpdateUserDto) {
+  async updateUser(userId: string, updateData: UpdateUserDto): Promise<User> {
     // If email is being updated, check if it's already taken
     if (updateData.email) {
       const existingUser = await this.prisma.user.findUnique({
@@ -80,11 +96,26 @@ export class UserService {
           ...updateData,
           updatedAt: new Date(),
         },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          emailVerified: true,
+          image: true,
+          role: true,
+          phone: true,
+          phoneVerified: true,
+          profileCompleted: true,
+          subscriptionId: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       });
 
       return this.sanitizeUser(updatedUser);
     } catch (error) {
-      throw new BadRequestException('Failed to update user profile');
+      console.error(error);
+      throw new BadRequestException('Failed to update user profile: ' + error);
     }
   }
 
@@ -100,7 +131,8 @@ export class UserService {
 
       return { message: 'Account deleted successfully' };
     } catch (error) {
-      throw new BadRequestException('Failed to delete user account');
+      console.error(error);
+      throw new BadRequestException('Failed to delete user account: ' + error);
     }
   }
 
@@ -172,9 +204,7 @@ export class UserService {
   /**
    * Remove sensitive fields from user object
    */
-  private sanitizeUser(user: any) {
-    // Remove any sensitive fields if needed
-    // For now, return as is since we don't store passwords in User table
+  private sanitizeUser(user: User): User {
     return user;
   }
 

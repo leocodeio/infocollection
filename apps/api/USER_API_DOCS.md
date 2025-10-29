@@ -360,7 +360,7 @@ const logoutOtherDevices = async () => {
 
 1. **HTTPS Only** - Always use HTTPS in production
 2. **CORS Configuration** - Configure trusted origins in `.env`
-3. **Session Expiration** - Sessions expire after 60 seconds (configurable in auth.ts:117)
+3. **Session Expiration** - Sessions expire after 7 days (configurable in apps/api/src/modules/better-auth/auth.ts)
 4. **Cookie Security** - Session cookies are httpOnly and secure
 5. **Rate Limiting** - Consider adding rate limiting middleware
 6. **Input Validation** - All inputs should be validated on frontend
@@ -412,12 +412,14 @@ Password: (set in SWAGGER_PASSWORD env var)
 ```
 apps/api/src/modules/better-auth/
 ├── auth.ts                    # Better Auth configuration
-├── user.module.ts             # NestJS module
-├── user.controller.ts         # API endpoints
-├── user.service.ts            # Business logic
-└── dto/
-    ├── user-response.dto.ts   # Response DTOs
-    └── update-user.dto.ts     # Request DTOs
+├── auth.controller.ts         # Better Auth API endpoint handler
+├── user/
+│   ├── user.module.ts         # NestJS module
+│   ├── user.controller.ts     # User API endpoints
+│   ├── user.service.ts        # Business logic
+│   └── dto/
+│       ├── user-response.dto.ts   # Response DTOs
+│       └── update-user.dto.ts     # Request DTOs
 ```
 
 ## Database Schema

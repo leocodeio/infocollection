@@ -31,7 +31,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // ==================== Profile Management ====================
+  // Profile Management
 
   @Get('me')
   @ApiOperation({
@@ -136,7 +136,7 @@ export class UserController {
     return await this.userService.deleteUser(session.user.id);
   }
 
-  // ==================== Session Management ====================
+  // Session Management
 
   @Get('me/sessions')
   @ApiOperation({
@@ -210,7 +210,7 @@ export class UserController {
     );
   }
 
-  // ==================== User Statistics ====================
+  // User Statistics
 
   @Get('me/stats')
   @ApiOperation({
@@ -231,7 +231,7 @@ export class UserController {
     return await this.userService.getUserStats(session.user.id);
   }
 
-  // ==================== Account Status ====================
+  // Account Status
 
   @Get('me/google-linked')
   @ApiOperation({
@@ -253,7 +253,7 @@ export class UserController {
     return { hasGoogleAccount: hasGoogle };
   }
 
-  // ==================== Public Endpoints ====================
+  // Public Endpoints
 
   @Get('health')
   @AllowAnonymous()
@@ -271,10 +271,189 @@ export class UserController {
       },
     },
   })
-  async healthCheck() {
+  healthCheck() {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Get('docs')
+  @AllowAnonymous()
+  @ApiOperation({
+    summary: 'Get API documentation for UI integration',
+    description:
+      'Returns basic authentication and API documentation for frontend integration',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Documentation retrieved successfully',
+  })
+  getDocs() {
+    return {
+      authentication: {
+        description:
+          'This API uses Better Auth for authentication with Google OAuth',
+        flow: {
+          step1: {
+            action: 'Initiate Google Login',
+            method: 'Redirect user to login URL',
+            url: '/api/auth/sign-in/social?provider=google',
+            description:
+              'Redirect the user to this URL to start the Google OAuth flow',
+          },
+          step2: {
+            action: 'Callback Handling',
+            description:
+              'After successful Google authentication, user will be redirected back to your app with a session cookie set',
+            callback: '/api/auth/callback/google',
+          },
+          step3: {
+            action: 'Session Management',
+            description:
+              'Session cookie is automatically set and used for authenticated requests',
+            cookie: 'better-auth.session_token',
+          },
+        },
+        endpoints: {
+          login: {
+            url: '/api/auth/sign-in/social',
+            method: 'GET',
+            params: { provider: 'google' },
+            description: 'Initiate Google OAuth login',
+            public: true,
+          },
+          getSession: {
+            url: '/api/auth/get-session',
+            method: 'GET',
+            description: 'Get current session details',
+            public: true,
+            returns: 'Session object or null if not authenticated',
+          },
+          logout: {
+            url: '/api/auth/sign-out',
+            method: 'POST',
+            description: 'Logout and clear session',
+            authenticated: true,
+          },
+        },
+      },
+      userEndpoints: {
+        profile: {
+          getProfile: {
+            url: '/users/me',
+            method: 'GET',
+            description: 'Get current user profile',
+            authenticated: true,
+            returns: 'User object with profile information',
+          },
+          getFullProfile: {
+            url: '/users/me/full',
+            method: 'GET',
+            description: 'Get user profile with session details',
+            authenticated: true,
+            returns: 'User object with current session information',
+          },
+          updateProfile: {
+            url: '/users/me',
+            method: 'PUT',
+            description: 'Update user profile',
+            authenticated: true,
+            body: {
+              name: 'string (optional)',
+              phone: 'string (optional)',
+              phoneVerified: 'boolean (optional)',
+              role: 'string (optional)',
+              profileCompleted: 'boolean (optional)',
+            },
+          },
+          deleteAccount: {
+            url: '/users/me',
+            method: 'DELETE',
+            description: 'Permanently delete user account',
+            authenticated: true,
+            warning: 'This action cannot be undone',
+          },
+        },
+        sessions: {
+          getAllSessions: {
+            url: '/users/me/sessions',
+            method: 'GET',
+            description: 'Get all active sessions across devices',
+            authenticated: true,
+          },
+          revokeSession: {
+            url: '/users/me/sessions/:sessionId',
+            method: 'DELETE',
+            description: 'Logout from a specific device',
+            authenticated: true,
+          },
+          revokeAllOther: {
+            url: '/users/me/sessions',
+            method: 'DELETE',
+            description: 'Logout from all other devices except current',
+            authenticated: true,
+          },
+        },
+        accounts: {
+          getAccounts: {
+            url: '/users/me/accounts',
+            method: 'GET',
+            description: 'Get linked OAuth accounts',
+            authenticated: true,
+          },
+          checkGoogleLink: {
+            url: '/users/me/google-linked',
+            method: 'GET',
+            description: 'Check if Google account is linked',
+            authenticated: true,
+          },
+        },
+        stats: {
+          getStats: {
+            url: '/users/me/stats',
+            method: 'GET',
+            description: 'Get user statistics (active sessions count)',
+            authenticated: true,
+          },
+        },
+      },
+      integration: {
+        frontend: {
+          login: {
+            description: 'Redirect user to Google login',
+            example:
+              "window.location.href = 'http://localhost:3001/api/auth/sign-in/social?provider=google'",
+          },
+          checkSession: {
+            description: 'Check if user is authenticated',
+            example:
+              "const response = await fetch('http://localhost:3001/api/auth/get-session', { credentials: 'include' }); const session = await response.json();",
+          },
+          getProfile: {
+            description: 'Get user profile',
+            example:
+              "const response = await fetch('http://localhost:3001/users/me', { credentials: 'include' }); const user = await response.json();",
+          },
+          logout: {
+            description: 'Logout user',
+            example:
+              "await fetch('http://localhost:3001/api/auth/sign-out', { method: 'POST', credentials: 'include' });",
+          },
+        },
+        important: {
+          credentials:
+            'Always include credentials: "include" in fetch requests to send session cookies',
+          cors: 'Ensure your frontend origin is allowed in CORS settings',
+          https: 'Use HTTPS in production for secure cookie transmission',
+        },
+      },
+      apiInfo: {
+        baseUrl: 'http://localhost:3001',
+        version: '1.0.0',
+        documentation: '/api-docs',
+        healthCheck: '/users/health',
+      },
     };
   }
 }
