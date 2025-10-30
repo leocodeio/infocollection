@@ -2,11 +2,13 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 
 export function Header() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 4);
@@ -14,6 +16,11 @@ export function Header() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
 
   return (
     <header
@@ -32,20 +39,55 @@ export function Header() {
           Logo
         </button>
         <nav className="flex items-center gap-2">
-          <Button
-            onClick={() => navigate("/feed")}
-            variant={pathname.startsWith("/feed") ? "secondary" : "ghost"}
-            className="rounded-full"
-          >
-            Feed
-          </Button>
-          <Button
-            onClick={() => navigate("/surf")}
-            variant={pathname.startsWith("/surf") ? "secondary" : "ghost"}
-            className="rounded-full"
-          >
-            Surf
-          </Button>
+          {isAuthenticated ? (
+            <>
+              <Button
+                onClick={() => navigate("/feed")}
+                variant={pathname.startsWith("/feed") ? "secondary" : "ghost"}
+                className="rounded-full"
+              >
+                Feed
+              </Button>
+              <Button
+                onClick={() => navigate("/surf")}
+                variant={pathname.startsWith("/surf") ? "secondary" : "ghost"}
+                className="rounded-full"
+              >
+                Surf
+              </Button>
+              <div className="flex items-center gap-2 ml-2 pl-2 border-l">
+                {user && (
+                  <div className="flex items-center gap-2">
+                    {user.image && (
+                      <img
+                        src={user.image}
+                        alt={user.name || "User"}
+                        className="w-8 h-8 rounded-full"
+                      />
+                    )}
+                    <span className="text-sm font-medium hidden sm:inline-block">
+                      {user.name}
+                    </span>
+                  </div>
+                )}
+                <Button
+                  onClick={handleLogout}
+                  variant="ghost"
+                  className="rounded-full"
+                >
+                  Logout
+                </Button>
+              </div>
+            </>
+          ) : (
+            <Button
+              onClick={() => navigate("/login")}
+              variant="default"
+              className="rounded-full"
+            >
+              Sign In
+            </Button>
+          )}
           <ThemeToggle />
         </nav>
       </div>

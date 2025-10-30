@@ -63,11 +63,14 @@ export class BootstrapConfig {
   };
 
   setupCors = (app: INestApplication) => {
-    const corsOrigin = this.configService.get<string>('CORS_ORIGIN') ?? '*';
+    const corsOrigin =
+      this.configService.get<string>('CORS_ORIGIN') ?? 'http://localhost:5173';
     const corsOptions = {
-      origin: corsOrigin,
+      origin: corsOrigin === '*' ? true : corsOrigin,
       credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+      exposedHeaders: ['Set-Cookie'],
     };
     app.enableCors(corsOptions);
   };
