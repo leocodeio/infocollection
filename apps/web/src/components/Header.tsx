@@ -36,7 +36,7 @@ export function Header() {
           onClick={() => navigate("/")}
           className="text-xl font-semibold tracking-tight hover:opacity-80 transition-opacity"
         >
-          Logo
+          Infocollection
         </button>
         <nav className="flex items-center gap-2">
           {isAuthenticated ? (

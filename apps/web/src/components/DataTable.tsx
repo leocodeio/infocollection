@@ -18,15 +18,17 @@ export function DataTable({
 }: DataTableProps) {
   const [showColumnSelector, setShowColumnSelector] = useState(false);
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
+  const [initialized, setInitialized] = useState(false);
 
   const allColumns = data.length > 0 ? Object.keys(data[0]) : [];
 
-  // Initialize selected columns to all columns on first render
+  // Initialize selected columns to all columns on first render only
   useEffect(() => {
-    if (allColumns.length > 0 && selectedColumns.length === 0) {
+    if (allColumns.length > 0 && !initialized) {
       setSelectedColumns(allColumns);
+      setInitialized(true);
     }
-  }, [allColumns, selectedColumns.length]);
+  }, [allColumns.length, initialized]);
 
   if (!data || data.length === 0) {
     return (
