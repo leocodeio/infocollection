@@ -1,4 +1,4 @@
-  import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Layout } from "../components/Layout";
@@ -117,7 +117,14 @@ export function Feed() {
 
     try {
       const response = await getQueries(pageNum, 12);
-      setQueries((prev) => [...prev, ...response.data]);
+
+      // Prevent duplicates by filtering out queries that already exist
+      setQueries((prev) => {
+        const existingIds = new Set(prev.map((q) => q.id));
+        const newQueries = response.data.filter((q) => !existingIds.has(q.id));
+        return [...prev, ...newQueries];
+      });
+
       setHasMore(response.pagination.hasMore);
       setPage(pageNum);
     } catch (err) {
@@ -129,6 +136,10 @@ export function Feed() {
   };
 
   useEffect(() => {
+    // Reset state on initial mount
+    setQueries([]);
+    setPage(0);
+    setHasMore(true);
     loadQueries(0);
   }, []);
 

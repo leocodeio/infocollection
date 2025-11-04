@@ -1,4 +1,6 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { Platform, PrismaClient } from '@prisma/client';
 import { CreateQueryDto, QueryResponseDto } from './dto/query.dto';
 import { YoutubeService } from './youtube/youtube.service';
@@ -9,7 +11,10 @@ const prisma = new PrismaClient();
 export class QueryService {
   private readonly logger = new Logger(QueryService.name);
 
-  constructor(private readonly youtubeService: YoutubeService) {}
+  constructor(
+    private readonly youtubeService: YoutubeService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
   async createQuery(
     userId: string,
@@ -65,6 +70,17 @@ export class QueryService {
   }
 
   async getQueryById(queryId: string): Promise<QueryResponseDto> {
+    const cacheKey = `query:${queryId}`;
+
+    // Try to get from cache first
+    const cached = await this.cacheManager.get<QueryResponseDto>(cacheKey);
+    if (cached) {
+      this.logger.log(`Cache hit for query ${queryId}`);
+      return cached;
+    }
+
+    this.logger.log(`Cache miss for query ${queryId}, fetching from database`);
+
     const query = await prisma.query.findUnique({
       where: { id: queryId },
       include: {
@@ -83,7 +99,15 @@ export class QueryService {
       throw new NotFoundException('Query not found');
     }
 
-    return this.mapQueryToDto(query);
+    const dto = this.mapQueryToDto(query);
+
+    // Cache only completed queries (they won't change)
+    if (query.status === 'COMPLETED') {
+      await this.cacheManager.set(cacheKey, dto, 300000); // 5 minutes
+      this.logger.log(`Cached query ${queryId}`);
+    }
+
+    return dto;
   }
 
   async getQuery(queryId: string, userId: string): Promise<QueryResponseDto> {
@@ -154,6 +178,10 @@ export class QueryService {
           totalResults,
         },
       });
+
+      // Invalidate cache for this query so fresh data is fetched
+      await this.cacheManager.del(`query:${queryId}`);
+      this.logger.log(`Invalidated cache for completed query ${queryId}`);
     } catch (error) {
       await prisma.query.update({
         where: { id: queryId },
@@ -163,6 +191,10 @@ export class QueryService {
             error instanceof Error ? error.message : 'Unknown error',
         },
       });
+
+      // Invalidate cache for this query
+      await this.cacheManager.del(`query:${queryId}`);
+      this.logger.log(`Invalidated cache for failed query ${queryId}`);
     }
   }
 

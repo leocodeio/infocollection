@@ -1,6 +1,7 @@
-import { Download } from "lucide-react";
+import { Download, Settings2, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { exportToCSV } from "../lib/csv-export";
+import { useState, useEffect } from "react";
 
 interface DataTableProps {
   data: any[];
@@ -15,6 +16,18 @@ export function DataTable({
   downloadFilename = "data",
   maxHeight = "600px",
 }: DataTableProps) {
+  const [showColumnSelector, setShowColumnSelector] = useState(false);
+  const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
+
+  const allColumns = data.length > 0 ? Object.keys(data[0]) : [];
+
+  // Initialize selected columns to all columns on first render
+  useEffect(() => {
+    if (allColumns.length > 0 && selectedColumns.length === 0) {
+      setSelectedColumns(allColumns);
+    }
+  }, [allColumns, selectedColumns.length]);
+
   if (!data || data.length === 0) {
     return (
       <div className="bg-accent/40 border border-border rounded-lg p-8 text-center">
@@ -23,10 +36,35 @@ export function DataTable({
     );
   }
 
-  const columns = Object.keys(data[0]);
+  const visibleColumns =
+    selectedColumns.length > 0 ? selectedColumns : allColumns;
+
+  // Filter out rows where all selected columns are null/empty
+  const filteredData = data.filter((row) => {
+    return visibleColumns.some((column) => {
+      const value = row[column];
+      return value !== null && value !== undefined && value !== "";
+    });
+  });
 
   const handleDownload = () => {
-    exportToCSV(data, downloadFilename, columns);
+    exportToCSV(filteredData, downloadFilename, visibleColumns);
+  };
+
+  const toggleColumn = (column: string) => {
+    setSelectedColumns((prev) =>
+      prev.includes(column)
+        ? prev.filter((c) => c !== column)
+        : [...prev, column],
+    );
+  };
+
+  const selectAllColumns = () => {
+    setSelectedColumns(allColumns);
+  };
+
+  const deselectAllColumns = () => {
+    setSelectedColumns([]);
   };
 
   return (
@@ -34,15 +72,71 @@ export function DataTable({
       {(title || downloadFilename) && (
         <div className="flex items-center justify-between p-4 border-b border-border">
           {title && <h3 className="text-lg font-semibold">{title}</h3>}
-          <Button
-            onClick={handleDownload}
-            variant="outline"
-            size="sm"
-            className="ml-auto"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Download CSV
-          </Button>
+          <div className="flex gap-2 ml-auto">
+            <Button
+              onClick={() => setShowColumnSelector(!showColumnSelector)}
+              variant="outline"
+              size="sm"
+              className={showColumnSelector ? "bg-accent" : ""}
+            >
+              <Settings2 className="w-4 h-4 mr-2" />
+              Columns
+            </Button>
+            <Button
+              onClick={handleDownload}
+              variant="outline"
+              size="sm"
+              disabled={selectedColumns.length === 0}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download CSV
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {showColumnSelector && (
+        <div className="bg-accent/60 border-b border-border p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-semibold">Select Columns</h4>
+            <div className="flex gap-2">
+              <button
+                onClick={selectAllColumns}
+                className="text-xs text-cyan-400 hover:text-cyan-300"
+              >
+                Select All
+              </button>
+              <span className="text-foreground/40">|</span>
+              <button
+                onClick={deselectAllColumns}
+                className="text-xs text-cyan-400 hover:text-cyan-300"
+              >
+                Deselect All
+              </button>
+              <button
+                onClick={() => setShowColumnSelector(false)}
+                className="ml-2 text-foreground/60 hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+            {allColumns.map((column) => (
+              <label
+                key={column}
+                className="flex items-center gap-2 cursor-pointer hover:bg-accent/40 p-2 rounded transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedColumns.includes(column)}
+                  onChange={() => toggleColumn(column)}
+                  className="w-4 h-4 rounded border-border bg-background/40 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-0"
+                />
+                <span className="text-sm">{formatColumnName(column)}</span>
+              </label>
+            ))}
+          </div>
         </div>
       )}
 
@@ -50,7 +144,7 @@ export function DataTable({
         <table className="w-full">
           <thead className="bg-accent/60 sticky top-0">
             <tr>
-              {columns.map((column) => (
+              {visibleColumns.map((column) => (
                 <th
                   key={column}
                   className="px-4 py-3 text-left text-sm font-semibold text-foreground border-b border-border"
@@ -61,12 +155,12 @@ export function DataTable({
             </tr>
           </thead>
           <tbody>
-            {data.map((row, rowIndex) => (
+            {filteredData.map((row, rowIndex) => (
               <tr
                 key={rowIndex}
                 className="hover:bg-accent/40 transition-colors border-b border-border/50"
               >
-                {columns.map((column) => (
+                {visibleColumns.map((column) => (
                   <td
                     key={`${rowIndex}-${column}`}
                     className="px-4 py-3 text-sm text-foreground/80"
@@ -81,7 +175,18 @@ export function DataTable({
       </div>
 
       <div className="p-3 bg-accent/20 border-t border-border text-sm text-foreground/60 text-center">
-        Showing {data.length} {data.length === 1 ? "row" : "rows"}
+        Showing {filteredData.length}{" "}
+        {filteredData.length === 1 ? "row" : "rows"}
+        {filteredData.length < data.length && (
+          <span className="ml-2 text-foreground/40">
+            ({data.length - filteredData.length} hidden with empty values)
+          </span>
+        )}
+        {selectedColumns.length < allColumns.length && (
+          <span className="ml-2">
+            ({selectedColumns.length} of {allColumns.length} columns visible)
+          </span>
+        )}
       </div>
     </div>
   );
