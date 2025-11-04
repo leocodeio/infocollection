@@ -69,9 +69,7 @@
     "typescript-eslint": "^8.20.0"
   },
   "overrides": {
-    "overrides": {
-      "jose": "5.2.3"
-    }
+    "jose": "5.2.3"
   },
   "jest": {
     "moduleFileExtensions": [
