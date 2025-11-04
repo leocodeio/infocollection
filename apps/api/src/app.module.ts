@@ -4,6 +4,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { QueryModule } from './modules/query/query.module';
 import Joi from 'joi';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 // Better auth
 import { AuthModule } from '@thallesp/nestjs-better-auth';
@@ -47,10 +49,23 @@ import { UserModule } from './modules/better-auth/user/user.module';
         BETTER_AUTH_GOOGLE_SECRET: Joi.string().required().default('sosec'),
       }),
     }),
+    // Global rate limiter - 150 requests per minute for most endpoints
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 1 minute in milliseconds
+        limit: 150, // 150 requests per minute
+      },
+    ]),
     QueryModule,
     UserModule,
   ],
   controllers: [AppController, AuthController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

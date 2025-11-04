@@ -16,6 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { Session } from '@thallesp/nestjs-better-auth';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
+import { Throttle } from '@nestjs/throttler';
 import { QueryService } from './query.service';
 import {
   CreateQueryDto,
@@ -28,6 +29,7 @@ import {
 @ApiTags('query')
 @ApiBearerAuth('Authorization')
 @Controller('query')
+@Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requests per minute for all query endpoints
 export class QueryController {
   constructor(private readonly queryService: QueryService) {}
 
