@@ -6,6 +6,7 @@ import {
   Param,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -20,10 +21,12 @@ import {
   CreateQueryDto,
   CreateQueryResponseDto,
   GetQueryResponseDto,
+  GetQueriesQueryDto,
+  PaginatedQueriesResponseDto,
 } from './dto/query.dto';
 
 @ApiTags('query')
-@ApiBearerAuth()
+@ApiBearerAuth('Authorization')
 @Controller('query')
 export class QueryController {
   constructor(private readonly queryService: QueryService) {}
@@ -57,11 +60,44 @@ export class QueryController {
     };
   }
 
+  @Get()
+  @ApiOperation({
+    summary: 'Get all queries with pagination',
+    description:
+      'Retrieve all queries with pagination support for infinite scroll. Accessible by all authenticated users.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Queries retrieved successfully',
+    type: PaginatedQueriesResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getQueries(
+    @Session() session: UserSession,
+    @Query() queryParams: GetQueriesQueryDto,
+  ): Promise<PaginatedQueriesResponseDto> {
+    const page = Number(queryParams.page) || 0;
+    const limit = Number(queryParams.limit) || 12;
+
+    const result = await this.queryService.getQueries(page, limit);
+
+    return {
+      success: true,
+      data: result.queries,
+      pagination: {
+        total: result.total,
+        page,
+        limit,
+        hasMore: (page + 1) * limit < result.total,
+      },
+    };
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get query results',
     description:
-      'Retrieve a query and its results by ID. Only accessible by the query owner.',
+      'Retrieve a query and its results by ID. Accessible by all authenticated users.',
   })
   @ApiResponse({
     status: 200,
@@ -74,7 +110,7 @@ export class QueryController {
     @Session() session: UserSession,
     @Param('id') id: string,
   ): Promise<GetQueryResponseDto> {
-    const query = await this.queryService.getQuery(id, session.user.id);
+    const query = await this.queryService.getQueryById(id);
 
     return {
       success: true,

@@ -4,7 +4,6 @@
 // import { WebhookOrderPaidPayload } from "@polar-sh/sdk/models/components/webhookorderpaidpayload.js";
 // import { WebhookSubscriptionRevokedPayload } from "@polar-sh/sdk/models/components/webhooksubscriptionrevokedpayload.js";
 
-
 // /**
 //  * Handles the 'order.paid' webhook event.
 //  * @param payload - The payload from the webhook.

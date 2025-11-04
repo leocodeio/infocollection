@@ -4,7 +4,11 @@ import {
   ApiOperation,
   ApiQuery,
   ApiOkResponse,
+  ApiBearerAuth,
+  ApiResponse,
 } from '@nestjs/swagger';
+import { Session } from '@thallesp/nestjs-better-auth';
+import type { UserSession } from '@thallesp/nestjs-better-auth';
 import { YoutubeService } from './youtube.service';
 import { SearchChannelsDto } from './dto/search-channels.dto';
 import type {
@@ -18,6 +22,7 @@ import {
 import { YOUTUBE_WORKFLOW } from './youtube.workflow';
 
 @ApiTags('youtube')
+@ApiBearerAuth('Authorization')
 @Controller('youtube')
 export class YoutubeController {
   private readonly logger = new Logger(YoutubeController.name);
@@ -30,6 +35,7 @@ export class YoutubeController {
     description:
       'Search for YouTube channels with advanced filtering options including subscriber count, view count, video count, and more.',
   })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiQuery({
     name: 'keywords',
     type: String,
@@ -93,6 +99,7 @@ export class YoutubeController {
     type: SearchChannelsResponseDto,
   })
   async searchChannels(
+    @Session() session: UserSession,
     @Query() query: Record<string, string>,
   ): Promise<SearchChannelsResponse> {
     this.logger.log('Received search request:', query);
@@ -180,11 +187,14 @@ export class YoutubeController {
     description:
       'Retrieve the n8n workflow configuration for YouTube channel search',
   })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiOkResponse({
     description: 'Workflow configuration retrieved successfully',
     type: WorkflowResponseDto,
   })
-  getWorkflow(): WorkflowResponse {
+  getWorkflow(@Session() session: UserSession): WorkflowResponse {
+    // Session required for authentication
+    void session;
     return {
       success: true,
       workflow: YOUTUBE_WORKFLOW,

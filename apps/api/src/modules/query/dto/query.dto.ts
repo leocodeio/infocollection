@@ -109,3 +109,35 @@ export class CreateQueryResponseDto {
   @ApiProperty({ description: 'Query data', type: QueryResponseDto })
   data: QueryResponseDto;
 }
+
+export class GetQueriesQueryDto {
+  @ApiPropertyOptional({
+    description: 'Page number (0-indexed)',
+    example: 0,
+    default: 0,
+  })
+  page?: number;
+
+  @ApiPropertyOptional({
+    description: 'Number of items per page',
+    example: 12,
+    default: 12,
+  })
+  limit?: number;
+}
+
+export class PaginatedQueriesResponseDto {
+  @ApiProperty({ description: 'Success status', example: true })
+  success: boolean;
+
+  @ApiProperty({ description: 'Queries data', type: [QueryResponseDto] })
+  data: QueryResponseDto[];
+
+  @ApiProperty({ description: 'Pagination metadata' })
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    hasMore: boolean;
+  };
+}

@@ -34,6 +34,58 @@ export class QueryService {
     return this.mapQueryToDto(query);
   }
 
+  async getQueries(
+    page: number = 0,
+    limit: number = 12,
+  ): Promise<{ queries: QueryResponseDto[]; total: number }> {
+    const skip = page * limit;
+
+    const [queries, total] = await Promise.all([
+      prisma.query.findMany({
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      }),
+      prisma.query.count(),
+    ]);
+
+    return {
+      queries: queries.map((query) => this.mapQueryToDto(query)),
+      total,
+    };
+  }
+
+  async getQueryById(queryId: string): Promise<QueryResponseDto> {
+    const query = await prisma.query.findUnique({
+      where: { id: queryId },
+      include: {
+        results: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!query) {
+      throw new NotFoundException('Query not found');
+    }
+
+    return this.mapQueryToDto(query);
+  }
+
   async getQuery(queryId: string, userId: string): Promise<QueryResponseDto> {
     const query = await prisma.query.findFirst({
       where: { id: queryId, userId },
