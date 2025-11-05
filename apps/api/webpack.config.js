@@ -1,4 +1,6 @@
 // webpack.config.js
+const nodeExternals = require('webpack-node-externals');
+
 module.exports = function (options, webpack) {
   const lazyImports = [
     '@nestjs/microservices',
@@ -13,7 +15,16 @@ module.exports = function (options, webpack) {
 
   return {
     ...options,
-    externals: [],
+    externals: [
+      nodeExternals({
+        allowlist: [
+          'better-auth',
+          '@better-auth/core',
+          '@thallesp/nestjs-better-auth',
+          /^jose/,
+        ],
+      }),
+    ],
     output: {
       ...options.output,
       libraryTarget: 'commonjs2',
