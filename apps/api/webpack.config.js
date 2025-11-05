@@ -1,6 +1,5 @@
 // webpack.config.js
 const nodeExternals = require('webpack-node-externals');
-const path = require('path');
 
 module.exports = function (options, webpack) {
   const lazyImports = [
@@ -17,21 +16,13 @@ module.exports = function (options, webpack) {
   return {
     ...options,
     externals: [
+      // Externalize all node_modules except the ESM ones we need to bundle
       nodeExternals({
-        modulesDir: path.resolve(__dirname, '../../node_modules'),
         allowlist: [
-          'better-auth',
-          '@better-auth/core',
-          '@thallesp/nestjs-better-auth',
-          /^jose/,
-        ],
-      }),
-      nodeExternals({
-        modulesDir: path.resolve(__dirname, 'node_modules'),
-        allowlist: [
-          'better-auth',
-          '@better-auth/core',
-          '@thallesp/nestjs-better-auth',
+          // Bundle ESM modules to avoid ERR_REQUIRE_ESM
+          /^better-auth/,
+          /^@better-auth/,
+          /^@thallesp\/nestjs-better-auth/,
           /^jose/,
         ],
       }),
@@ -43,11 +34,6 @@ module.exports = function (options, webpack) {
     resolve: {
       ...options.resolve,
       fullySpecified: false,
-      modules: [
-        path.resolve(__dirname, 'node_modules'),
-        path.resolve(__dirname, '../../node_modules'),
-        'node_modules',
-      ],
     },
     module: {
       ...options.module,

@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "buildCommand": "pnpm install && pnpm build",
+  "installCommand": "pnpm install --shamefully-hoist",
+  "builds": [
+    {
+      "src": "dist/main.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/dist/main.js"
+    }
+  ]
+}
