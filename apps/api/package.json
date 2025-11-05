@@ -86,10 +86,5 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
-  },
-  "pnpm": {
-    "overrides": {
-      "jose": "5.2.3"
-    }
   }
 }
