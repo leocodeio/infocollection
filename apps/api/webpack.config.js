@@ -1,5 +1,6 @@
 // webpack.config.js
 const nodeExternals = require('webpack-node-externals');
+const path = require('path');
 
 module.exports = function (options, webpack) {
   const lazyImports = [
@@ -17,6 +18,16 @@ module.exports = function (options, webpack) {
     ...options,
     externals: [
       nodeExternals({
+        modulesDir: path.resolve(__dirname, '../../node_modules'),
+        allowlist: [
+          'better-auth',
+          '@better-auth/core',
+          '@thallesp/nestjs-better-auth',
+          /^jose/,
+        ],
+      }),
+      nodeExternals({
+        modulesDir: path.resolve(__dirname, 'node_modules'),
         allowlist: [
           'better-auth',
           '@better-auth/core',
@@ -32,6 +43,11 @@ module.exports = function (options, webpack) {
     resolve: {
       ...options.resolve,
       fullySpecified: false,
+      modules: [
+        path.resolve(__dirname, 'node_modules'),
+        path.resolve(__dirname, '../../node_modules'),
+        'node_modules',
+      ],
     },
     module: {
       ...options.module,
