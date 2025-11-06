@@ -67,6 +67,8 @@ export const auth = betterAuth({
   trustedOrigins: [
     process.env.APP_BASE_URL as string,
     process.env.API_BASE_URL as string,
+    'http://localhost:5173', // development
+    'http://localhost:3001', // development
   ],
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
@@ -90,6 +92,11 @@ export const auth = betterAuth({
       redirectURI: `${process.env.API_BASE_URL}/api/auth/callback/google`,
     },
   },
+
+  /*
+   * Redirect configuration
+   */
+  callbackURL: `${process.env.APP_BASE_URL}/callback`,
 
   /*
    * additional fields
