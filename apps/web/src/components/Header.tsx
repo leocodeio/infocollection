@@ -10,7 +10,7 @@ export function Header() {
   const { pathname } = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, loading, logout } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 4);
@@ -60,7 +60,12 @@ export function Header() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-2">
-          {isAuthenticated ? (
+          {loading ? (
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium">Loading...</p>
+              <ThemeToggle />
+            </div>
+          ) : isAuthenticated ? (
             <>
               <Button
                 onClick={() => navigate("/feed")}
@@ -99,17 +104,20 @@ export function Header() {
                   Logout
                 </Button>
               </div>
+              <ThemeToggle />
             </>
           ) : (
-            <Button
-              onClick={() => navigate("/login")}
-              variant="default"
-              className="rounded-full"
-            >
-              Sign In
-            </Button>
+            <>
+              <Button
+                onClick={() => navigate("/login")}
+                variant="default"
+                className="rounded-full"
+              >
+                Sign In
+              </Button>
+              <ThemeToggle />
+            </>
           )}
-          <ThemeToggle />
         </nav>
 
         {/* Mobile Menu Button */}
@@ -134,7 +142,11 @@ export function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-x-0 top-[60px] bottom-0 bg-background/95 backdrop-blur-lg border-t border-border animate-fade-in">
           <nav className="flex flex-col p-4 space-y-2">
-            {isAuthenticated ? (
+            {loading ? (
+              <div className="flex flex-col gap-2">
+                <div className="w-full h-16 bg-accent/50 rounded-lg animate-pulse" />
+              </div>
+            ) : isAuthenticated ? (
               <>
                 {user && (
                   <div className="flex items-center gap-3 p-4 bg-accent/40 rounded-lg mb-4">
