@@ -19,7 +19,8 @@
   },
   "pnpm": {
     "overrides": {
-      "jose": "5.10.0"
+      "jose": "5.10.0",
+      "@noble/ciphers": "1.3.0"
     }
   }
 }
