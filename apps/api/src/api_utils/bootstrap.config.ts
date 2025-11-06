@@ -65,12 +65,41 @@ export class BootstrapConfig {
   setupCors = (app: INestApplication) => {
     const corsOrigin =
       this.configService.get<string>('CORS_ORIGIN') ?? 'http://localhost:5173';
+    const appBaseUrl = this.configService.get<string>('APP_BASE_URL');
+
+    // Support multiple origins for development
+    const allowedOrigins = [
+      corsOrigin,
+      appBaseUrl,
+      'http://localhost:5173',
+      'http://localhost:3001',
+    ].filter(Boolean);
+
     const corsOptions = {
-      origin: corsOrigin === '*' ? true : corsOrigin,
+      origin: (
+        origin: string,
+        callback: (err: Error | null, allow?: boolean) => void,
+      ) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+      allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
+        'Accept',
+        'Origin',
+      ],
       exposedHeaders: ['Set-Cookie'],
+      maxAge: 86400, // 24 hours
     };
     app.enableCors(corsOptions);
   };

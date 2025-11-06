@@ -89,14 +89,10 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.BETTER_AUTH_GOOGLE_ID!,
       clientSecret: process.env.BETTER_AUTH_GOOGLE_SECRET!,
+      // OAuth callback URL - where Google redirects back to (must be the API endpoint)
       redirectURI: `${process.env.API_BASE_URL}/api/auth/callback/google`,
     },
   },
-
-  /*
-   * Redirect configuration
-   */
-  callbackURL: `${process.env.APP_BASE_URL}/callback`,
 
   /*
    * additional fields
@@ -129,8 +125,15 @@ export const auth = betterAuth({
    */
   advanced: {
     cookiePrefix: 'leostack',
+    useSecureCookies: process.env.NODE_ENV === 'production',
+    // For cross-domain cookies (different origins like localhost:3001 and localhost:5173)
+    defaultCookieAttributes: {
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+    },
     crossSubDomainCookies: {
-      enabled: true,
+      enabled: false, // Set to false for different ports/origins
     },
   },
   session: {

@@ -1,6 +1,8 @@
 // API base URL
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
+const APP_BASE_URL =
+  import.meta.env.VITE_APP_BASE_URL || "http://localhost:5173";
 
 // User type
 export interface User {
@@ -44,6 +46,7 @@ export async function loginWithGoogle(): Promise<void> {
       },
       body: JSON.stringify({
         provider: "google",
+        callbackURL: `${APP_BASE_URL}/callback`,
       }),
       credentials: "include",
     });
@@ -127,7 +130,7 @@ export async function logout(): Promise<void> {
 export async function updateProfile(
   data: Partial<
     Pick<User, "name" | "phone" | "phoneVerified" | "role" | "profileCompleted">
-  >,
+  >
 ): Promise<User | null> {
   try {
     const response = await fetch(`${API_BASE_URL}/users/me`, {
