@@ -44,7 +44,6 @@ export async function loginWithGoogle(): Promise<void> {
       },
       body: JSON.stringify({
         provider: "google",
-        callbackURL: `${API_BASE_URL}/api/auth/callback/google`,
       }),
       credentials: "include",
     });
