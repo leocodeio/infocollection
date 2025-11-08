@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { getSession, getUserProfile, logout as logoutApi } from "../lib/auth";
+import { getCurrentUser, logout as logoutApi } from "../lib/auth";
 import type { User } from "../lib/auth";
 
 interface AuthContextType {
@@ -23,13 +23,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshUser = async () => {
     try {
-      const session = await getSession();
-      if (session) {
-        const profile = await getUserProfile();
-        setUser(profile);
-      } else {
-        setUser(null);
-      }
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
     } catch (error) {
       console.error("Failed to refresh user:", error);
       setUser(null);

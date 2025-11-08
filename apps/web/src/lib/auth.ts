@@ -1,64 +1,116 @@
 // API base URL
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
-const APP_BASE_URL =
-  import.meta.env.VITE_APP_BASE_URL || "http://localhost:5173";
 
-// User type
+// User type (matches backend /auth/me response)
 export interface User {
   id: string;
-  name: string | null;
   email: string;
-  emailVerified: boolean;
+  name: string | null;
   image: string | null;
-  role: string | null;
-  phone: string | null;
-  phoneVerified: boolean;
-  profileCompleted: boolean;
-  subscriptionId: string | null;
-  createdAt: string;
-  updatedAt: string;
+  emailVerified: boolean | null;
 }
 
 // Session type
 export interface Session {
+  id: string;
+  userId: string;
+  expiresAt: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+}
+
+// Auth responses
+export interface AuthResponse {
   user: User;
-  session: {
-    id: string;
-    expiresAt: Date;
-    userId: string;
-    ipAddress: string | null;
-    userAgent: string | null;
-    createdAt: Date;
-    updatedAt: Date;
-  };
+  session: Session;
+}
+
+export interface GoogleAuthUrlResponse {
+  authUrl: string;
+  message: string;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  name: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
 }
 
 /**
- * Redirect to Google login
+ * Register with email and password
  */
-export async function loginWithGoogle(): Promise<void> {
+export async function register(data: RegisterRequest): Promise<AuthResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/sign-in/social`, {
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        provider: "google",
-        callbackURL: `${APP_BASE_URL}/callback`,
-      }),
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to register");
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Failed to register:", error);
+    throw error;
+  }
+}
+
+/**
+ * Login with email and password
+ */
+export async function login(data: LoginRequest): Promise<AuthResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to login");
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Failed to login:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get Google OAuth URL and redirect
+ */
+export async function loginWithGoogle(): Promise<void> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/google`, {
       credentials: "include",
     });
 
     if (!response.ok) {
-      throw new Error("Failed to get OAuth URL");
+      throw new Error("Failed to get Google OAuth URL");
     }
 
-    const data = await response.json();
+    const data: GoogleAuthUrlResponse = await response.json();
 
-    if (data.url) {
-      window.location.href = data.url;
+    if (data.authUrl) {
+      window.location.href = data.authUrl;
     } else {
       throw new Error("No OAuth URL returned");
     }
@@ -69,11 +121,11 @@ export async function loginWithGoogle(): Promise<void> {
 }
 
 /**
- * Get current session
+ * Get current user
  */
-export async function getSession(): Promise<Session | null> {
+export async function getCurrentUser(): Promise<User | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/get-session`, {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
       credentials: "include",
     });
 
@@ -81,31 +133,9 @@ export async function getSession(): Promise<Session | null> {
       return null;
     }
 
-    const data = await response.json();
-    return data;
+    return response.json();
   } catch (error) {
-    console.error("Failed to get session:", error);
-    return null;
-  }
-}
-
-/**
- * Get current user profile
- */
-export async function getUserProfile(): Promise<User | null> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/users/me`, {
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const user = await response.json();
-    return user;
-  } catch (error) {
-    console.error("Failed to get user profile:", error);
+    console.error("Failed to get current user:", error);
     return null;
   }
 }
@@ -115,41 +145,53 @@ export async function getUserProfile(): Promise<User | null> {
  */
 export async function logout(): Promise<void> {
   try {
-    await fetch(`${API_BASE_URL}/api/auth/sign-out`, {
+    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
+
+    if (!response.ok) {
+      console.error("Logout request failed");
+    }
   } catch (error) {
     console.error("Failed to logout:", error);
   }
 }
 
 /**
- * Update user profile
+ * Refresh access token
  */
-export async function updateProfile(
-  data: Partial<
-    Pick<User, "name" | "phone" | "phoneVerified" | "role" | "profileCompleted">
-  >
-): Promise<User | null> {
+export async function refreshToken(
+  refreshToken: string,
+): Promise<AuthResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/me`, {
-      method: "PUT",
-      credentials: "include",
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(data),
+      credentials: "include",
+      body: JSON.stringify({ refreshToken }),
     });
 
     if (!response.ok) {
-      return null;
+      throw new Error("Failed to refresh token");
     }
 
-    const user = await response.json();
-    return user;
+    return response.json();
   } catch (error) {
-    console.error("Failed to update profile:", error);
-    return null;
+    console.error("Failed to refresh token:", error);
+    throw error;
   }
+}
+
+// Deprecated - kept for backward compatibility
+export async function getSession(): Promise<{ user: User } | null> {
+  const user = await getCurrentUser();
+  return user ? { user } : null;
+}
+
+// Deprecated - kept for backward compatibility
+export async function getUserProfile(): Promise<User | null> {
+  return getCurrentUser();
 }

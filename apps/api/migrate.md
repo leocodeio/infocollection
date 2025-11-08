@@ -116,7 +116,7 @@ export const cookieConstants = {
 
 export const authConstants = {
   bcryptSaltRounds: 10,
-  googleCallbackUrl: `${process.env.API_BASE_URL}/api/auth/callback/google`,
+  googleCallbackUrl: `${process.env.API_BASE_URL}/auth/callback/google`,
 };
 ```
 
@@ -631,7 +631,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     super({
       clientID: process.env.BETTER_AUTH_GOOGLE_ID,
       clientSecret: process.env.BETTER_AUTH_GOOGLE_SECRET,
-      callbackURL: `${process.env.API_BASE_URL}/api/auth/callback/google`,
+      callbackURL: `${process.env.API_BASE_URL}/auth/callback/google`,
       scope: ['email', 'profile'],
     });
     this.prisma = new PrismaClient();
@@ -1633,7 +1633,7 @@ echo "Testing Authentication Endpoints..."
 
 # Test signup
 echo "1. Testing signup..."
-SIGNUP_RESPONSE=$(curl -s -X POST http://localhost:3001/api/auth/signup \
+SIGNUP_RESPONSE=$(curl -s -X POST http://localhost:3001/auth/signup \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"Test1234","name":"Test User"}')
 
@@ -1641,7 +1641,7 @@ echo "Signup Response: $SIGNUP_RESPONSE"
 
 # Test signin
 echo "2. Testing signin..."
-SIGNIN_RESPONSE=$(curl -s -X POST http://localhost:3001/api/auth/signin \
+SIGNIN_RESPONSE=$(curl -s -X POST http://localhost:3001/auth/signin \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"Test1234"}')
 
@@ -1657,7 +1657,7 @@ echo "User Response: $USER_RESPONSE"
 
 # Test signout
 echo "4. Testing signout..."
-SIGNOUT_RESPONSE=$(curl -s -X POST http://localhost:3001/api/auth/signout \
+SIGNOUT_RESPONSE=$(curl -s -X POST http://localhost:3001/auth/signout \
   -H "Authorization: Bearer $ACCESS_TOKEN")
 
 echo "Signout Response: $SIGNOUT_RESPONSE"
@@ -1736,19 +1736,19 @@ This API uses JWT-based authentication with the following features:
 
 ### Endpoints
 
-- `POST /api/auth/signup` - Register new user
-- `POST /api/auth/signin` - Login with email/password
-- `GET /api/auth/signin/google` - Initiate Google OAuth
-- `GET /api/auth/callback/google` - Google OAuth callback
-- `POST /api/auth/signout` - Logout
-- `POST /api/auth/refresh` - Refresh access token
-- `GET /api/auth/session` - Get current session
+- `POST /auth/signup` - Register new user
+- `POST /auth/signin` - Login with email/password
+- `GET /auth/signin/google` - Initiate Google OAuth
+- `GET /auth/callback/google` - Google OAuth callback
+- `POST /auth/signout` - Logout
+- `POST /auth/refresh` - Refresh access token
+- `GET /auth/session` - Get current session
 
 ### Usage
 
 ```typescript
 // Login
-const response = await fetch('/api/auth/signin', {
+const response = await fetch('/auth/signin', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ email, password }),
