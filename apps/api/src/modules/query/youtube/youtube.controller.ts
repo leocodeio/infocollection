@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Logger } from '@nestjs/common';
+import { Controller, Get, Query, Logger, UseGuards } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -7,8 +7,9 @@ import {
   ApiBearerAuth,
   ApiResponse,
 } from '@nestjs/swagger';
-import { Session } from '@thallesp/nestjs-better-auth';
-import type { UserSession } from '@thallesp/nestjs-better-auth';
+import { JwtAuthGuard } from '../../auth/guards';
+import { CurrentUser } from '../../auth/decorators';
+import type { RequestUser } from '../../auth/types/auth.types';
 import { YoutubeService } from './youtube.service';
 import { SearchChannelsDto } from './dto/search-channels.dto';
 import type {
@@ -23,6 +24,7 @@ import { YOUTUBE_WORKFLOW } from './youtube.workflow';
 
 @ApiTags('youtube')
 @ApiBearerAuth('Authorization')
+@UseGuards(JwtAuthGuard)
 @Controller('youtube')
 export class YoutubeController {
   private readonly logger = new Logger(YoutubeController.name);
@@ -99,7 +101,7 @@ export class YoutubeController {
     type: SearchChannelsResponseDto,
   })
   async searchChannels(
-    @Session() session: UserSession,
+    @CurrentUser() user: RequestUser,
     @Query() query: Record<string, string>,
   ): Promise<SearchChannelsResponse> {
     this.logger.log('Received search request:', query);
@@ -192,9 +194,9 @@ export class YoutubeController {
     description: 'Workflow configuration retrieved successfully',
     type: WorkflowResponseDto,
   })
-  getWorkflow(@Session() session: UserSession): WorkflowResponse {
-    // Session required for authentication
-    void session;
+  getWorkflow(@CurrentUser() user: RequestUser): WorkflowResponse {
+    // User required for authentication
+    void user;
     return {
       success: true,
       workflow: YOUTUBE_WORKFLOW,

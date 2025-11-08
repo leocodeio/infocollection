@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -14,8 +15,9 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { Session } from '@thallesp/nestjs-better-auth';
-import type { UserSession } from '@thallesp/nestjs-better-auth';
+import { JwtAuthGuard } from '../auth/guards';
+import { CurrentUser } from '../auth/decorators';
+import type { RequestUser } from '../auth/types/auth.types';
 import { Throttle } from '@nestjs/throttler';
 import { QueryService } from './query.service';
 import {
@@ -28,6 +30,7 @@ import {
 
 @ApiTags('query')
 @ApiBearerAuth('Authorization')
+@UseGuards(JwtAuthGuard)
 @Controller('query')
 @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requests per minute for all query endpoints
 export class QueryController {
@@ -47,11 +50,11 @@ export class QueryController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async createQuery(
-    @Session() session: UserSession,
+    @CurrentUser() user: RequestUser,
     @Body() createQueryDto: CreateQueryDto,
   ): Promise<CreateQueryResponseDto> {
     const query = await this.queryService.createQuery(
-      session.user.id,
+      user.userId,
       createQueryDto,
     );
 
@@ -75,7 +78,7 @@ export class QueryController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getQueries(
-    @Session() session: UserSession,
+    @CurrentUser() user: RequestUser,
     @Query() queryParams: GetQueriesQueryDto,
   ): Promise<PaginatedQueriesResponseDto> {
     const page = Number(queryParams.page) || 0;
@@ -109,7 +112,7 @@ export class QueryController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Query not found' })
   async getQuery(
-    @Session() session: UserSession,
+    @CurrentUser() user: RequestUser,
     @Param('id') id: string,
   ): Promise<GetQueryResponseDto> {
     const query = await this.queryService.getQueryById(id);

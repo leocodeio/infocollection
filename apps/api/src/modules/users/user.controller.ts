@@ -7,6 +7,7 @@ import {
   Param,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -14,8 +15,9 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { Session, AllowAnonymous } from '@thallesp/nestjs-better-auth';
-import type { UserSession } from '@thallesp/nestjs-better-auth';
+import { JwtAuthGuard } from '../auth/guards';
+import { CurrentUser } from '../auth/decorators';
+import type { RequestUser } from '../auth/types/auth.types';
 import { UserService } from './user.service';
 import {
   UserResponseDto,
@@ -27,6 +29,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 @ApiTags('users')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -44,8 +47,8 @@ export class UserController {
     type: UserResponseDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getProfile(@Session() session: UserSession) {
-    return await this.userService.getUserById(session.user.id);
+  async getProfile(@CurrentUser() user: RequestUser) {
+    return await this.userService.getUserById(user.userId);
   }
 
   @Get('me/full')
@@ -60,18 +63,17 @@ export class UserController {
     type: UserWithSessionDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getFullProfile(@Session() session: UserSession) {
-    const user = await this.userService.getUserById(session.user.id);
+  async getFullProfile(@CurrentUser() user: RequestUser) {
+    const userProfile = await this.userService.getUserById(user.userId);
+    const sessions = await this.userService.getUserSessions(user.userId);
+    const currentSession = sessions.find((s) => s.id === user.sessionId);
+
     return {
-      user,
-      session: {
-        id: session.session.id,
-        expiresAt: session.session.expiresAt,
-        userId: session.session.userId,
-        ipAddress: session.session.ipAddress,
-        userAgent: session.session.userAgent,
-        createdAt: session.session.createdAt,
-        updatedAt: session.session.updatedAt,
+      user: userProfile,
+      session: currentSession || {
+        id: user.sessionId,
+        expiresAt: new Date(),
+        userId: user.userId,
       },
     };
   }
@@ -88,8 +90,8 @@ export class UserController {
     type: UserAccountsResponseDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getUserAccounts(@Session() session: UserSession) {
-    return await this.userService.getUserWithAccounts(session.user.id);
+  async getUserAccounts(@CurrentUser() user: RequestUser) {
+    return await this.userService.getUserWithAccounts(user.userId);
   }
 
   @Put('me')
@@ -109,10 +111,10 @@ export class UserController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async updateProfile(
-    @Session() session: UserSession,
+    @CurrentUser() user: RequestUser,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return await this.userService.updateUser(session.user.id, updateUserDto);
+    return await this.userService.updateUser(user.userId, updateUserDto);
   }
 
   @Delete('me')
@@ -132,8 +134,8 @@ export class UserController {
     },
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async deleteAccount(@Session() session: UserSession) {
-    return await this.userService.deleteUser(session.user.id);
+  async deleteAccount(@CurrentUser() user: RequestUser) {
+    return await this.userService.deleteUser(user.userId);
   }
 
   // Session Management
@@ -150,8 +152,8 @@ export class UserController {
     type: [SessionResponseDto],
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getSessions(@Session() session: UserSession) {
-    return await this.userService.getUserSessions(session.user.id);
+  async getSessions(@CurrentUser() user: RequestUser) {
+    return await this.userService.getUserSessions(user.userId);
   }
 
   @Delete('me/sessions/:sessionId')
@@ -177,10 +179,10 @@ export class UserController {
   })
   @ApiResponse({ status: 404, description: 'Session not found' })
   async revokeSession(
-    @Session() session: UserSession,
+    @CurrentUser() user: RequestUser,
     @Param('sessionId') sessionId: string,
   ) {
-    return await this.userService.revokeSession(session.user.id, sessionId);
+    return await this.userService.revokeSession(user.userId, sessionId);
   }
 
   @Delete('me/sessions')
@@ -203,10 +205,10 @@ export class UserController {
     },
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async revokeAllOtherSessions(@Session() session: UserSession) {
+  async revokeAllOtherSessions(@CurrentUser() user: RequestUser) {
     return await this.userService.revokeAllOtherSessions(
-      session.user.id,
-      session.session.id,
+      user.userId,
+      user.sessionId,
     );
   }
 
@@ -227,8 +229,8 @@ export class UserController {
     },
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getStats(@Session() session: UserSession) {
-    return await this.userService.getUserStats(session.user.id);
+  async getStats(@CurrentUser() user: RequestUser) {
+    return await this.userService.getUserStats(user.userId);
   }
 
   // Account Status
@@ -248,15 +250,15 @@ export class UserController {
     },
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async checkGoogleLink(@Session() session: UserSession) {
-    const hasGoogle = await this.userService.hasGoogleAccount(session.user.id);
+  async checkGoogleLink(@CurrentUser() user: RequestUser) {
+    const hasGoogle = await this.userService.hasGoogleAccount(user.userId);
     return { hasGoogleAccount: hasGoogle };
   }
 
-  // Public Endpoints
+  // Public Endpoints (no authentication required)
 
   @Get('health')
-  @AllowAnonymous()
+  @UseGuards() // Override class-level guard
   @ApiOperation({
     summary: 'Health check endpoint',
     description: 'Public endpoint to check if the user service is running',
@@ -279,7 +281,7 @@ export class UserController {
   }
 
   @Get('docs')
-  @AllowAnonymous()
+  @UseGuards() // Override class-level guard
   @ApiOperation({
     summary: 'Get API documentation for UI integration',
     description:
@@ -293,47 +295,67 @@ export class UserController {
     return {
       authentication: {
         description:
-          'This API uses Better Auth for authentication with Google OAuth',
+          'This API uses custom JWT authentication with Google OAuth',
         flow: {
           step1: {
-            action: 'Initiate Google Login',
-            method: 'Redirect user to login URL',
-            url: '/api/auth/sign-in/social?provider=google',
+            action: 'Register or Login',
+            methods: ['POST /auth/register', 'POST /auth/login'],
+            description:
+              'Create account with email/password or login to get access token',
+          },
+          step2: {
+            action: 'Google OAuth (Alternative)',
+            method: 'Redirect user to /auth/google',
+            url: '/auth/google',
             description:
               'Redirect the user to this URL to start the Google OAuth flow',
           },
-          step2: {
-            action: 'Callback Handling',
-            description:
-              'After successful Google authentication, user will be redirected back to your app with a session cookie set',
-            callback: '/api/auth/callback/google',
-          },
           step3: {
-            action: 'Session Management',
+            action: 'Use Access Token',
             description:
-              'Session cookie is automatically set and used for authenticated requests',
-            cookie: 'better-auth.session_token',
+              'Include access token in Authorization header or cookie for authenticated requests',
+            header: 'Authorization: Bearer <access_token>',
           },
         },
         endpoints: {
+          register: {
+            url: '/auth/register',
+            method: 'POST',
+            body: { email: 'string', password: 'string', name: 'string' },
+            description: 'Create a new account',
+            public: true,
+          },
           login: {
-            url: '/api/auth/sign-in/social',
+            url: '/auth/login',
+            method: 'POST',
+            body: { email: 'string', password: 'string' },
+            description: 'Login with email and password',
+            public: true,
+            returns: 'Access token and refresh token',
+          },
+          googleLogin: {
+            url: '/auth/google',
             method: 'GET',
-            params: { provider: 'google' },
             description: 'Initiate Google OAuth login',
             public: true,
           },
-          getSession: {
-            url: '/api/auth/get-session',
-            method: 'GET',
-            description: 'Get current session details',
+          refresh: {
+            url: '/auth/refresh',
+            method: 'POST',
+            body: { refreshToken: 'string' },
+            description: 'Refresh access token',
             public: true,
-            returns: 'Session object or null if not authenticated',
           },
           logout: {
-            url: '/api/auth/sign-out',
+            url: '/auth/logout',
             method: 'POST',
             description: 'Logout and clear session',
+            authenticated: true,
+          },
+          me: {
+            url: '/auth/me',
+            method: 'GET',
+            description: 'Get current authenticated user',
             authenticated: true,
           },
         },
@@ -421,31 +443,33 @@ export class UserController {
       integration: {
         frontend: {
           login: {
+            description: 'Login with email/password',
+            example:
+              "const response = await fetch('http://localhost:3001/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }), credentials: 'include' });",
+          },
+          googleLogin: {
             description: 'Redirect user to Google login',
             example:
-              "window.location.href = 'http://localhost:3001/api/auth/sign-in/social?provider=google'",
-          },
-          checkSession: {
-            description: 'Check if user is authenticated',
-            example:
-              "const response = await fetch('http://localhost:3001/api/auth/get-session', { credentials: 'include' }); const session = await response.json();",
+              "window.location.href = 'http://localhost:3001/auth/google'",
           },
           getProfile: {
-            description: 'Get user profile',
+            description: 'Get user profile with bearer token',
             example:
-              "const response = await fetch('http://localhost:3001/users/me', { credentials: 'include' }); const user = await response.json();",
+              "const response = await fetch('http://localhost:3001/users/me', { headers: { 'Authorization': `Bearer ${accessToken}` } });",
           },
           logout: {
             description: 'Logout user',
             example:
-              "await fetch('http://localhost:3001/api/auth/sign-out', { method: 'POST', credentials: 'include' });",
+              "await fetch('http://localhost:3001/auth/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${accessToken}` } });",
           },
         },
         important: {
           credentials:
-            'Always include credentials: "include" in fetch requests to send session cookies',
+            'Include credentials: "include" in fetch requests for cookie-based auth',
           cors: 'Ensure your frontend origin is allowed in CORS settings',
           https: 'Use HTTPS in production for secure cookie transmission',
+          bearer:
+            'Use Authorization: Bearer <token> header for token-based auth',
         },
       },
       apiInfo: {

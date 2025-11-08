@@ -7,15 +7,13 @@ import Joi from 'joi';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 
-// Better auth
-import { AuthModule } from '@thallesp/nestjs-better-auth';
-import { auth } from './modules/better-auth/auth';
-import { AuthController } from './modules/better-auth/auth.controller';
-import { UserModule } from './modules/better-auth/user/user.module';
+// Custom auth
+import { AuthModule } from './modules/auth/auth.module';
+import { UserModule } from './modules/users/user.module';
 
 @Module({
   imports: [
-    AuthModule.forRoot({ auth }),
+    AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
       // Load environment variables - update with the path to your .env file
@@ -43,10 +41,10 @@ import { UserModule } from './modules/better-auth/user/user.module';
         // Cors
         CORS_ORIGIN: Joi.string().optional().default('*'),
 
-        // better auth
-        BETTER_AUTH_SECRET: Joi.string().required().default('sosec'),
-        BETTER_AUTH_GOOGLE_ID: Joi.string().required().default('sosec'),
-        BETTER_AUTH_GOOGLE_SECRET: Joi.string().required().default('sosec'),
+        // Custom auth
+        JWT_SECRET: Joi.string().required(),
+        GOOGLE_CLIENT_ID: Joi.string().optional(),
+        GOOGLE_CLIENT_SECRET: Joi.string().optional(),
       }),
     }),
     // Global rate limiter - 150 requests per minute for most endpoints
@@ -59,7 +57,7 @@ import { UserModule } from './modules/better-auth/user/user.module';
     QueryModule,
     UserModule,
   ],
-  controllers: [AppController, AuthController],
+  controllers: [AppController],
   providers: [
     AppService,
     {
