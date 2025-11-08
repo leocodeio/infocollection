@@ -133,9 +133,9 @@ export async function getCurrentUser(): Promise<User | null> {
       return null;
     }
 
-    return response.json();
+    const user = await response.json();
+    return user;
   } catch (error) {
-    console.error("Failed to get current user:", error);
     return null;
   }
 }

@@ -26,7 +26,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const currentUser = await getCurrentUser();
       setUser(currentUser);
     } catch (error) {
-      console.error("Failed to refresh user:", error);
       setUser(null);
     } finally {
       setLoading(false);
