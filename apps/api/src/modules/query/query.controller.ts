@@ -17,7 +17,6 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards';
 import { CurrentUser } from '../auth/decorators';
-import type { RequestUser } from '../auth/types/auth.types';
 import { Throttle } from '@nestjs/throttler';
 import { QueryService } from './query.service';
 import {
@@ -50,13 +49,10 @@ export class QueryController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async createQuery(
-    @CurrentUser() user: RequestUser,
+    @CurrentUser() user: any,
     @Body() createQueryDto: CreateQueryDto,
   ): Promise<CreateQueryResponseDto> {
-    const query = await this.queryService.createQuery(
-      user.userId,
-      createQueryDto,
-    );
+    const query = await this.queryService.createQuery(user.id, createQueryDto);
 
     return {
       success: true,
@@ -78,7 +74,7 @@ export class QueryController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getQueries(
-    @CurrentUser() user: RequestUser,
+    @CurrentUser() user: any,
     @Query() queryParams: GetQueriesQueryDto,
   ): Promise<PaginatedQueriesResponseDto> {
     const page = Number(queryParams.page) || 0;
@@ -112,7 +108,7 @@ export class QueryController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Query not found' })
   async getQuery(
-    @CurrentUser() user: RequestUser,
+    @CurrentUser() user: any,
     @Param('id') id: string,
   ): Promise<GetQueryResponseDto> {
     const query = await this.queryService.getQueryById(id);
